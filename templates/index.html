@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Notes App</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
+    input { width: 70%; padding: 8px; font-size: 16px; }
+    button { padding: 8px 16px; font-size: 16px; cursor: pointer; }
+    ul { list-style: none; padding: 0; margin-top: 20px; }
+    li { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
+  </style>
+</head>
+<body>
+  <h1>My Notes</h1>
+
+  <div>
+    <input type="text" id="note-input" placeholder="Write a note...">
+    <button onclick="addNote()">Add</button>
+  </div>
+
+  <ul id="notes-list"></ul>
+
+  <script>
+    // Load all notes when the page opens
+    async function loadNotes() {
+      const res = await fetch("/notes");
+      const notes = await res.json();
+      const list = document.getElementById("notes-list");
+      list.innerHTML = notes.map(n =>
+        `<li>${n.content} <button onclick="deleteNote(${n.id})">Delete</button></li>`
+      ).join("");
+    }
+
+    // Add a new note
+    async function addNote() {
+      const input = document.getElementById("note-input");
+      if (!input.value.trim()) return;
+      await fetch("/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: input.value })
+      });
+      input.value = "";
+      loadNotes();
+    }
+
+    // Delete a note
+    async function deleteNote(id) {
+      await fetch(`/notes/${id}`, { method: "DELETE" });
+      loadNotes();
+    }
+
+    loadNotes();
+  </script>
+</body>
+</html>
